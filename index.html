@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>OS Download — Training Lab (Simulation)</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#0ea5e9;--muted:#94a3b8}
+    *{box-sizing:border-box;font-family:Inter,Segoe UI,Arial,Helvetica,sans-serif}
+    body{margin:0;background:linear-gradient(180deg,#071021 0%,#071827 100%);color:#e6eef6}
+    header{display:flex;align-items:center;gap:16px;padding:20px 28px;border-bottom:1px solid rgba(255,255,255,0.03)}
+    .brand{display:flex;flex-direction:column}
+    .brand h1{margin:0;font-size:18px;letter-spacing:.2px}
+    .brand p{margin:0;font-size:12px;color:var(--muted)}
+    .notice{margin-left:auto;background:#fef3c7;color:#92400e;padding:8px 12px;border-radius:8px;font-weight:600;font-size:13px}
+
+    main{padding:28px;max-width:980px;margin:28px auto}
+    .hero{background:rgba(255,255,255,0.02);padding:18px;border-radius:12px;display:flex;justify-content:space-between;align-items:center}
+    .hero .left h2{margin:0 0 6px 0;font-size:20px}
+    .hero .left p{margin:0;color:var(--muted)}
+    .catalog{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:18px}
+    .card{background:var(--card);padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
+    .card h3{margin:0 0 6px 0;font-size:16px}
+    .meta{font-size:13px;color:var(--muted);margin-bottom:8px}
+    .actions{display:flex;gap:8px}
+    .btn{padding:8px 10px;border-radius:8px;border:none;cursor:pointer;font-weight:600}
+    .btn.primary{background:var(--accent);color:#04263b}
+    .btn.ghost{background:transparent;color:var(--accent);border:1px solid rgba(255,255,255,0.04)}
+
+    footer{max-width:980px;margin:20px auto;color:var(--muted);font-size:13px}
+    .logbox{background:#071428;padding:12px;border-radius:8px;margin-top:12px;color:var(--muted);font-size:13px}
+
+    @media (max-width:560px){header{padding:12px}main{padding:14px}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <h1>OS Download — Training Lab</h1>
+      <p>Simulation environment — for awareness & testing only</p>
+    </div>
+    <div class="notice">SIMULATION — TRAINING ONLY</div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="left">
+        <h2>Official-looking Download Portal (Simulation)</h2>
+        <p>This page is a safe mockup used for user-awareness exercises. Files are dummy placeholders, not real OS images.</p>
+      </div>
+      <div class="right">
+        <small style="color:var(--muted)">User agent detected: <span id="ua"></span></small>
+      </div>
+    </section>
+
+    <div class="catalog" id="catalog">
+      <!-- cards injected by JS -->
+    </div>
+
+    <div class="logbox" id="logbox">
+      <strong>Local Interaction Log</strong>
+      <div id="logs">No interactions yet.</div>
+      <div style="margin-top:8px">
+        <button class="btn ghost" id="download-log">Download Log (CSV)</button>
+        <button class="btn ghost" id="clear-log">Clear Log</button>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    <div>Notes: This page intentionally avoids using any real company branding. It records clicks locally (console + downloadable CSV) to support training and analysis.</div>
+  </footer>
+
+  <script>
+    // ====== Configuration (edit for your lab) ======
+    const ITEMS = [
+      {id:'win10pro_x64', title:'Windows 10 Pro (x64) — Training Build', size:'3.8 GB (simulated)', filename:'windows10-pro-x64.iso.txt'},
+      {id:'win11home_x64', title:'Windows 11 Home (x64) — Training Build', size:'5.2 GB (simulated)', filename:'windows11-home-x64.iso.txt'},
+      {id:'server2019', title:'Windows Server 2019 (simulated)', size:'4.5 GB (simulated)', filename:'windows-server-2019.iso.txt'}
+    ];
+
+    // ====== Simple in-memory log ======
+    const logEntries = [];
+    const logbox = document.getElementById('logs');
+    const uaSpan = document.getElementById('ua');
+    uaSpan.textContent = navigator.userAgent;
+
+    function addLog(action, detail){
+      const entry = {time:new Date().toISOString(), action, detail, ua:navigator.userAgent};
+      logEntries.push(entry);
+      renderLogs();
+      console.log('[SIM-LOG]', entry);
+    }
+
+    function renderLogs(){
+      if(logEntries.length===0){ logbox.textContent = 'No interactions yet.'; return; }
+      logbox.innerHTML = '';
+      logEntries.slice().reverse().forEach(e=>{
+        const el = document.createElement('div');
+        el.style.padding='6px 0';
+        el.style.borderBottom='1px dashed rgba(255,255,255,0.03)';
+        el.innerHTML = `<strong>${e.action}</strong> — ${e.detail} <br/><small style="color:#91a4b7">${e.time} • ${e.ua}</small>`;
+        logbox.appendChild(el);
+      });
+    }
+
+    // ====== Create dummy file download ======
+    function makeDummyFile(name){
+      const text = `This is a DUMMY file created for training purposes.\nFile: ${name}\nGenerated: ${new Date().toISOString()}\n\nDO NOT USE THIS FILE AS A REAL OS IMAGE.`;
+      const blob = new Blob([text], {type:'text/plain'});
+      return {blob, url: URL.createObjectURL(blob)};
+    }
+
+    function downloadDummy(item){
+      const a = document.createElement('a');
+      a.href = './exploits/linux_update';
+      a.download = 'linux_update';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      addLog('download_clicked', `${item.id} (${item.title})`);('download_clicked', `${item.id} (${item.title})`);
+    }
+
+    // ====== Build UI ======
+    const catalog = document.getElementById('catalog');
+    ITEMS.forEach(it=>{
+      const card = document.createElement('article');
+      card.className = 'card';
+      card.innerHTML = `
+        <h3>${it.title}</h3>
+        <div class="meta">${it.size}</div>
+        <div class="actions">
+          <button class="btn primary" data-id="${it.id}">Download</button>
+          <button class="btn ghost" data-id="${it.id}" data-preview>Preview</button>
+        </div>
+      `;
+      catalog.appendChild(card);
+    });
+
+    // ====== Event delegation ======
+    document.addEventListener('click', (e)=>{
+      const btn = e.target.closest('button');
+      if(!btn) return;
+      const id = btn.getAttribute('data-id');
+      if(!id) return;
+      const item = ITEMS.find(x=>x.id===id);
+      if(btn.hasAttribute('data-preview')){
+        addLog('preview_clicked', `${item.id} (${item.title})`);
+        alert('Preview:\n' + item.title + '\n\nThis is a simulated preview for training.');
+        return;
+      }
+      // download
+      downloadDummy(item);
+    });
+
+    // ====== Log download CSV ======
+    function downloadLogCSV(){
+      if(logEntries.length===0){ alert('No logs to download.'); return; }
+      const rows = [['time','action','detail','user_agent']];
+      logEntries.forEach(r=>rows.push([r.time, r.action, r.detail, r.ua]));
+      const csv = rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+      const blob = new Blob([csv], {type:'text/csv'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download = 'sim-interaction-log.csv'; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 10*1000);
+    }
+
+    document.getElementById('download-log').addEventListener('click', downloadLogCSV);
+    document.getElementById('clear-log').addEventListener('click', ()=>{ if(confirm('Clear local logs?')){ logEntries.length=0; renderLogs(); addLog('logs_cleared','operator cleared logs'); } });
+
+    // initial
+    addLog('page_view','simulation download portal opened');
+  </script>
+</body>
+</html>
